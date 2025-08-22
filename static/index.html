@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP 智能化问答应用</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-robot"></i> MCP 智能化问答应用</h1>
+                <p class="subtitle">智能数据库查询 · 天气查询 · 通用问答</p>
+            </div>
+        </header>
+
+        <!-- 主要内容区域 -->
+        <main class="main-content">
+            <!-- 左侧控制面板 -->
+            <aside class="sidebar">
+                <div class="control-panel">
+                    <h3><i class="fas fa-cogs"></i> 控制面板</h3>
+                    
+                    <!-- 数据库切换 -->
+                    <div class="control-group">
+                        <label for="db-select">当前数据库:</label>
+                        <select id="db-select" class="form-control">
+                            <option value="hospital">🏥 医疗数据库</option>
+                            <option value="warehouse">📦 仓储数据库</option>
+                        </select>
+                    </div>
+
+                    <!-- 用户角色选择 -->
+                    <div class="control-group">
+                        <label for="role-select">用户角色:</label>
+                        <select id="role-select" class="form-control">
+                            <option value="D101">👨‍⚕️ 医生 (D101)</option>
+                            <option value="D102">👩‍⚕️ 医生 (D102)</option>
+                            <option value="S1001">👨‍💼 仓库经理 (S1001)</option>
+                            <option value="S1002">👷 仓库操作员 (S1002)</option>
+                            <option value="test_user">👤 普通用户</option>
+                        </select>
+                    </div>
+
+                    <!-- 模型选择 -->
+                    <div class="model-panel">
+                        <h4><i class="fas fa-brain"></i> 模型选择</h4>
+                        <div class="model-type-selector">
+                            <label>模型类型:</label>
+                            <div class="radio-group">
+                                <label class="radio-item">
+                                    <input type="radio" name="model-type" value="auto" checked>
+                                    <span>🤖 自动选择</span>
+                                </label>
+                                <label class="radio-item">
+                                    <input type="radio" name="model-type" value="local">
+                                    <span>🏠 本地模型</span>
+                                </label>
+                                <label class="radio-item">
+                                    <input type="radio" name="model-type" value="cloud">
+                                    <span>☁️ 云端模型</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="cloud-model-selector" style="display: none;">
+                            <label>云端模型:</label>
+                            <select id="cloud-model-select" class="form-control">
+                                <option value="deepseek-r1">🚀 DeepSeek R1</option>
+                                <option value="deepseek-chat">💬 DeepSeek Chat</option>
+                                <option value="gpt-4o-mini">🤖 GPT-4o Mini</option>
+                            </select>
+                        </div>
+                        
+                        <div class="model-status">
+                            <div class="status-item">
+                                <span class="status-label">本地模型:</span>
+                                <span id="local-model-status" class="status-badge">检测中...</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">云端模型:</span>
+                                <span id="cloud-model-status" class="status-badge">检测中...</span>
+                            </div>
+                        </div>
+                        
+                        <button id="test-models" class="btn btn-secondary">
+                            <i class="fas fa-sync-alt"></i> 测试模型
+                        </button>
+                    </div>
+
+                    <!-- 连接状态 -->
+                    <div class="status-panel">
+                        <h4><i class="fas fa-database"></i> 连接状态</h4>
+                        <div class="status-item">
+                            <span class="status-label">医疗数据库:</span>
+                            <span id="hospital-status" class="status-badge">检测中...</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">仓储数据库:</span>
+                            <span id="warehouse-status" class="status-badge">检测中...</span>
+                        </div>
+                        <button id="test-connection" class="btn btn-secondary">
+                            <i class="fas fa-sync-alt"></i> 测试连接
+                        </button>
+                    </div>
+
+                    <!-- 快速示例 -->
+                    <div class="quick-examples">
+                        <h4><i class="fas fa-lightbulb"></i> 快速示例</h4>
+                        <div class="example-item" data-question="查询所有心内科的医生信息">
+                            <i class="fas fa-user-md"></i> 查询心内科医生
+                        </div>
+                        <div class="example-item" data-question="查询所有笔记本电脑的库存数量">
+                            <i class="fas fa-laptop"></i> 查询笔记本库存
+                        </div>
+                        <div class="example-item" data-question="北京今天天气怎么样？">
+                            <i class="fas fa-cloud-sun"></i> 查询北京天气
+                        </div>
+                        <div class="example-item" data-question="什么是人工智能？">
+                            <i class="fas fa-brain"></i> 人工智能介绍
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- 右侧聊天区域 -->
+            <section class="chat-section">
+                <div class="chat-container">
+                    <!-- 聊天消息区域 -->
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="welcome-message">
+                            <div class="message-content">
+                                <h3>👋 欢迎使用 MCP 智能化问答应用！</h3>
+                                <p>我可以帮助你：</p>
+                                <ul>
+                                    <li>🔍 查询医疗和仓储数据库</li>
+                                    <li>🌤️ 获取实时天气信息</li>
+                                    <li>💡 回答各种知识问题</li>
+                                </ul>
+                                <p>请在上方选择数据库和角色，然后开始提问吧！</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 输入区域 -->
+                    <div class="chat-input">
+                        <div class="input-container">
+                            <textarea 
+                                id="question-input" 
+                                placeholder="请输入你的问题..."
+                                rows="3"
+                                class="question-textarea"
+                            ></textarea>
+                            <button id="send-btn" class="send-btn">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                        <div class="input-tips">
+                            <span class="tip">💡 提示：可以询问数据库信息、天气状况或任何知识问题</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 底部信息 -->
+        <footer class="footer">
+            <p>&copy; 2024 MCP 智能化问答应用 | 基于 FastAPI + 智能模型路由</p>
+        </footer>
+    </div>
+
+    <!-- 加载指示器 -->
+    <div id="loading" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>正在处理您的请求...</p>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
