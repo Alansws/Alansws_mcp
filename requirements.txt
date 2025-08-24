@@ -9,7 +9,7 @@ pydantic-settings==2.4.0
 orjson==3.10.7
 pymysql==1.1.1
 cryptography==42.0.8
-llama-cpp-python==0.2.56
+llama-cpp-python==0.3.16
 openai==1.42.0
 
 # Optional model clients (enable as needed)

@@ -29,21 +29,54 @@ class LocalGGUFClient:
 			print(f"警告: {self._error_message}")
 			return
 		
+		# 验证模型文件大小和完整性
+		file_size = os.path.getsize(self.model_path)
+		if file_size < 100 * 1024 * 1024:  # 小于100MB
+			self._error_message = f"模型文件过小，可能损坏: {file_size / (1024*1024):.1f}MB"
+			print(f"警告: {self._error_message}")
+			return
+		
+		print(f"模型文件大小: {file_size / (1024*1024):.1f}MB")
+		
 		try:
+			# 使用更稳定的参数配置
 			self.llm = Llama(
 				model_path=self.model_path,
-				n_ctx=4096,
-				n_threads=4,
-				verbose=False
+				n_ctx=2048,  # 减少上下文长度，提高稳定性
+				n_threads=2,  # 减少线程数，避免资源冲突
+				n_batch=512,  # 添加批处理大小
+				verbose=False,
+				use_mmap=True,  # 启用内存映射
+				use_mlock=False,  # 禁用内存锁定
+				seed=-1  # 随机种子
 			)
 			self._model_loaded = True
 			self._error_message = ""
 			print(f"成功加载本地模型: {self.model_path}")
 		except Exception as e:
-			self._error_message = f"初始化模型失败: {e}"
-			print(f"警告: {self._error_message}")
-			print("本地模型功能不可用，将使用云端模型作为备选")
-			self._model_loaded = False
+			print(f"第一次尝试加载失败: {e}")
+			print("尝试使用更保守的参数重新加载...")
+			
+			try:
+				# 使用更保守的参数重试
+				self.llm = Llama(
+					model_path=self.model_path,
+					n_ctx=1024,  # 进一步减少上下文长度
+					n_threads=1,  # 单线程
+					n_batch=256,  # 减少批处理大小
+					verbose=False,
+					use_mmap=False,  # 禁用内存映射
+					use_mlock=False,
+					seed=-1
+				)
+				self._model_loaded = True
+				self._error_message = ""
+				print(f"使用保守参数成功加载本地模型: {self.model_path}")
+			except Exception as e2:
+				self._error_message = f"初始化模型失败: {e2}"
+				print(f"警告: {self._error_message}")
+				print("本地模型功能不可用，将使用云端模型作为备选")
+				self._model_loaded = False
 	
 	def get_model_info(self) -> Dict[str, Any]:
 		"""获取模型信息"""
@@ -128,6 +161,36 @@ SQL:"""
 	def get_error_message(self) -> str:
 		"""获取错误信息"""
 		return self._error_message
+	
+	def check_model_compatibility(self) -> Dict[str, Any]:
+		"""检查模型兼容性"""
+		compatibility_info = {
+			"llama_cpp_version": "unknown",
+			"model_file_exists": False,
+			"model_file_size": 0,
+			"model_file_readable": False,
+			"llama_available": LLAMA_AVAILABLE
+		}
+		
+		try:
+			import llama_cpp
+			compatibility_info["llama_cpp_version"] = llama_cpp.__version__
+		except:
+			pass
+		
+		if os.path.exists(self.model_path):
+			compatibility_info["model_file_exists"] = True
+			compatibility_info["model_file_size"] = os.path.getsize(self.model_path)
+			
+			# 检查文件是否可读
+			try:
+				with open(self.model_path, 'rb') as f:
+					f.read(1024)  # 读取前1KB
+				compatibility_info["model_file_readable"] = True
+			except:
+				compatibility_info["model_file_readable"] = False
+		
+		return compatibility_info
 
 
 # 全局实例

@@ -31,15 +31,24 @@ async def read_index():
 
 @app.get("/api/models/status")
 async def get_models_status():
-    """获取所有模型的状态"""
-    return {
-        "local_model": local_client.get_model_info(),
-        "cloud_model": {
-            "current": cloud_client.get_current_model(),
-            "available": cloud_client.get_available_models(),
-            "status": "available"  # API易模型通常总是可用的
-        }
-    }
+	"""获取所有模型的状态"""
+	return {
+		"local_model": local_client.get_model_info(),
+		"cloud_model": {
+			"current": cloud_client.get_current_model(),
+			"available": cloud_client.get_available_models(),
+			"status": "available"  # API易模型通常总是可用的
+		}
+	}
+
+
+@app.get("/api/models/compatibility")
+async def get_model_compatibility():
+	"""获取模型兼容性信息"""
+	return {
+		"local_model_compatibility": local_client.check_model_compatibility(),
+		"llama_cpp_available": "llama_cpp" in locals() or "llama_cpp" in globals()
+	}
 
 
 @app.post("/api/models/switch")
